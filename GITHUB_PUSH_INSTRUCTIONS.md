@@ -113,8 +113,6 @@ python main.py
 ### API Documentation:
 Full API documentation available at `/docs` when running the server.
 
-### License:
-MIT License (or your preferred license)
 
 ### Contributing:
 Contributions welcome! Please read CONTRIBUTING.md for guidelines.

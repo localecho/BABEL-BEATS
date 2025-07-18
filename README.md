@@ -2,7 +2,6 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg)](https://fastapi.tiangolo.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Learn languages through the universal language of music! BABEL-BEATS uses cutting-edge AI to analyze your speech patterns and generate personalized music that helps you master pronunciation, rhythm, and intonation in over 100 languages.
 
@@ -203,9 +202,6 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
