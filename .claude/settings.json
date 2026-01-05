@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": [
+    "ralph-wiggum@claude-plugins-official",
+    "code-review@claude-plugins-official"
+  ]
+}
