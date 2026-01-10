@@ -99,7 +99,7 @@ Model Context Protocol (MCP) servers extend Claude Code with specialized capabil
 
 | Server | Purpose | Install Command |
 |--------|---------|-----------------|
-| **Puppeteer** | Browser automation, screenshots, web scraping | `claude mcp add puppeteer -- npx -y @anthropic-ai/mcp-puppeteer` |
+| **Puppeteer** | Browser automation, screenshots, web scraping | `claude mcp add puppeteer -- npx -y @modelcontextprotocol/server-puppeteer` |
 | **Supabase** | Database operations, auth, storage | `claude mcp add supabase -- npx -y @supabase/mcp-server-supabase` |
 | **GitHub** | Repo management, issues, PRs | `claude mcp add github -- npx -y @anthropic-ai/mcp-github` |
 | **Filesystem** | Extended file operations | `claude mcp add filesystem -- npx -y @anthropic-ai/mcp-filesystem` |
@@ -113,7 +113,7 @@ Create `.mcp.json` in project root:
   "mcpServers": {
     "puppeteer": {
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-puppeteer"]
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
     },
     "supabase": {
       "command": "npx",
