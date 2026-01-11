@@ -302,5 +302,16 @@ Output: <promise>COMPLETE</promise>
 
 ---
 
+## Version History
+
+| Date | Update |
+|------|--------|
+| 2026-01-10 | Added MCP server configuration, CI workflow templates, timestamp tracking |
+| 2026-01-10 | Initial Ralph Loop deployment across BlueDuckLLC & LocalEcho repos |
+
+---
+
 *Ralph Loop methodology based on [Geoffrey Huntley's original technique](https://ghuntley.com/ralph/)*
 *MCP Puppeteer: [Documentation](https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-puppeteer)*
+
+**Last updated:** 2026-01-10
