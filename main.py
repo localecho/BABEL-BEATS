@@ -537,3 +537,23 @@ if __name__ == "__main__":
         ws_ping_interval=20,
         ws_ping_timeout=20
     )
+
+# ─── Waitlist ───
+import csv
+from pathlib import Path
+
+class WaitlistEntry(BaseModel):
+    email: str
+    source: str = "website"
+
+@app.post("/api/waitlist")
+async def join_waitlist(entry: WaitlistEntry):
+    csv_path = Path("data/waitlist.csv")
+    csv_path.parent.mkdir(exist_ok=True)
+    file_exists = csv_path.exists()
+    with open(csv_path, "a", newline="") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["email", "source", "timestamp"])
+        writer.writerow([entry.email, entry.source, datetime.now().isoformat()])
+    return {"ok": True}

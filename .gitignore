@@ -107,3 +107,6 @@ desktop.ini
 *.key
 *.cert
 *.crt
+# Waitlist data
+data/waitlist.csv
+data/waitlist.json

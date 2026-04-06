@@ -914,5 +914,19 @@
 
         console.log('BABEL-BEATS initialized successfully!');
     </script>
+
+<!-- Waitlist -->
+<div id="waitlist" style="background:#111;padding:48px 24px;text-align:center;margin:32px 0;border-radius:12px;">
+  <h2 style="color:#fff;font-size:24px;margin:0 0 8px;">Get Early Access</h2>
+  <p style="color:#999;margin:0 0 20px;font-size:14px;">Join the waitlist. No spam, just launch updates.</p>
+  <form id="waitlistForm" style="display:flex;gap:8px;max-width:400px;margin:0 auto;" onsubmit="return submitWaitlist(event)">
+    <input type="email" id="waitlistEmail" placeholder="you@email.com" required style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid #333;background:#222;color:#fff;font-size:14px;">
+    <button type="submit" style="padding:10px 20px;border-radius:8px;border:none;background:#fff;color:#111;font-weight:600;cursor:pointer;font-size:14px;">Join Waitlist</button>
+  </form>
+  <div id="waitlistSuccess" style="display:none;color:#4ade80;font-size:14px;margin-top:12px;">You're on the list. We'll be in touch.</div>
+</div>
+<script>
+function submitWaitlist(e){e.preventDefault();var email=document.getElementById('waitlistEmail').value;fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,source:'website'})}).then(function(r){if(r.ok){document.getElementById('waitlistForm').style.display='none';document.getElementById('waitlistSuccess').style.display='block';}});return false;}
+</script>
 </body>
 </html>
