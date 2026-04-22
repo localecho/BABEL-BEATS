@@ -27,4 +27,4 @@ jobs:
           AUTORESEARCH_METRIC: ${{ vars.AUTORESEARCH_METRIC }}
           AUTORESEARCH_DIRECTION: ${{ vars.AUTORESEARCH_DIRECTION }}
           AUTORESEARCH_REGRESSION_TOLERANCE: ${{ vars.AUTORESEARCH_REGRESSION_TOLERANCE || '0.05' }}
-        run: pytest tests/test_autoresearch_notebook.py tests/test_harness_mutation.py -v
+        run: pytest tests/test_notebook_lint.py tests/test_autoresearch_notebook.py tests/test_harness_mutation.py -v
