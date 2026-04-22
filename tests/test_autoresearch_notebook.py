@@ -1,22 +1,29 @@
 """
-Autoresearch notebook contract test.
+Autoresearch notebook contract tests (TDD v2).
 
-Asserts the target notebook:
-  1. Executes without error under papermill
-  2. Emits a line matching `METRIC: <name>=<value>` in cell output
-  3. <value> parses as a finite float
+Three layers of assertion:
 
-Wire into each repo's CI so the keep/revert loop always has a valid signal.
+  1. **Contract**: notebook executes + emits `METRIC: <name>=<value>` that parses
+     as a finite float.
 
-Usage in a repo:
-    pytest tests/test_autoresearch_notebook.py
+  2. **Bounds**: metric value sits within a reasonable range for its direction.
+     Maximize metrics should be >= 0 unless explicitly allowed; minimize metrics
+     should be finite. Catches NaN / huge sentinel values.
 
-Override notebook path + metric name via env:
+  3. **Regression lock**: if `tests/metric_baseline.json` exists with a recorded
+     baseline for this notebook, the new value must not regress by more than
+     REGRESSION_TOLERANCE (default 5%). Bump the baseline by re-running the
+     notebook and committing `metric_baseline.json`.
+
+Env:
     AUTORESEARCH_NOTEBOOK=notebooks/autoresearch.ipynb
     AUTORESEARCH_METRIC=<metric_name>
+    AUTORESEARCH_DIRECTION=maximize|minimize    (optional, default maximize)
+    AUTORESEARCH_REGRESSION_TOLERANCE=0.05       (optional, 5% default)
 """
 from __future__ import annotations
 
+import json
 import math
 import os
 import re
@@ -32,6 +39,11 @@ NOTEBOOK_PATH = REPO_ROOT / os.environ.get(
     "AUTORESEARCH_NOTEBOOK", "notebooks/autoresearch.ipynb"
 )
 METRIC_NAME = os.environ.get("AUTORESEARCH_METRIC", "")
+DIRECTION = os.environ.get("AUTORESEARCH_DIRECTION", "maximize").lower()
+REGRESSION_TOLERANCE = float(
+    os.environ.get("AUTORESEARCH_REGRESSION_TOLERANCE", "0.05")
+)
+BASELINE_FILE = REPO_ROOT / "tests" / "metric_baseline.json"
 
 
 def _papermill_available() -> bool:
@@ -45,11 +57,8 @@ def _papermill_available() -> bool:
         return False
 
 
-@pytest.mark.skipif(not _papermill_available(), reason="papermill not installed")
-def test_notebook_emits_metric():
-    assert NOTEBOOK_PATH.exists(), f"Notebook not found: {NOTEBOOK_PATH}"
-    assert METRIC_NAME, "Set AUTORESEARCH_METRIC env var or hardcode in test"
-
+def _execute_and_extract() -> float:
+    """Run papermill + extract METRIC value. Shared by multiple tests."""
     with tempfile.NamedTemporaryFile(suffix=".ipynb", delete=False) as tmp:
         out_path = tmp.name
 
@@ -71,7 +80,6 @@ def test_notebook_emits_metric():
     pattern = re.compile(
         rf"METRIC:\s*{re.escape(METRIC_NAME)}\s*=\s*([0-9eE.+\-]+)"
     )
-    found = None
     for cell in nb.cells:
         for output in cell.get("outputs", []):
             text = ""
@@ -81,13 +89,63 @@ def test_notebook_emits_metric():
                 text = "".join(output.get("data", {}).get("text/plain", []))
             m = pattern.search(text)
             if m:
-                found = m.group(1)
-                break
-        if found:
-            break
+                return float(m.group(1))
+    pytest.fail(f"No `METRIC: {METRIC_NAME}=...` line in notebook output")
 
-    assert found is not None, (
-        f"No `METRIC: {METRIC_NAME}=...` line found in notebook output"
-    )
-    value = float(found)
+
+# ---------------------------------------------------------------------------
+# Layer 1 — contract
+# ---------------------------------------------------------------------------
+@pytest.mark.skipif(not _papermill_available(), reason="papermill not installed")
+def test_notebook_emits_metric():
+    assert NOTEBOOK_PATH.exists(), f"Notebook not found: {NOTEBOOK_PATH}"
+    assert METRIC_NAME, "Set AUTORESEARCH_METRIC env var"
+    value = _execute_and_extract()
     assert math.isfinite(value), f"Metric value not finite: {value}"
+
+
+# ---------------------------------------------------------------------------
+# Layer 2 — bounds
+# ---------------------------------------------------------------------------
+@pytest.mark.skipif(not _papermill_available(), reason="papermill not installed")
+def test_metric_value_is_reasonable():
+    """Guard against sentinel values (−1, 1e18) and NaN masquerading as float."""
+    value = _execute_and_extract()
+    assert not math.isnan(value), "Metric is NaN"
+    assert abs(value) < 1e12, (
+        f"Metric magnitude suspicious ({value}). Suggests error sentinel."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Layer 3 — regression lock
+# ---------------------------------------------------------------------------
+@pytest.mark.skipif(
+    not _papermill_available() or not BASELINE_FILE.exists(),
+    reason="papermill not installed or no baseline locked",
+)
+def test_metric_does_not_regress():
+    """
+    If tests/metric_baseline.json exists, the new value must not regress by
+    more than REGRESSION_TOLERANCE. Update the file and commit to bump.
+    """
+    baseline = json.loads(BASELINE_FILE.read_text())
+    key = METRIC_NAME or "_default"
+    if key not in baseline:
+        pytest.skip(f"No baseline entry for metric '{key}'")
+
+    locked = baseline[key]["value"]
+    value = _execute_and_extract()
+
+    if DIRECTION == "maximize":
+        floor = locked * (1.0 - REGRESSION_TOLERANCE)
+        assert value >= floor, (
+            f"Regression: {METRIC_NAME}={value} < floor={floor} "
+            f"(locked baseline={locked}, tolerance={REGRESSION_TOLERANCE:.0%})"
+        )
+    else:  # minimize
+        ceiling = locked * (1.0 + REGRESSION_TOLERANCE)
+        assert value <= ceiling, (
+            f"Regression: {METRIC_NAME}={value} > ceiling={ceiling} "
+            f"(locked baseline={locked}, tolerance={REGRESSION_TOLERANCE:.0%})"
+        )

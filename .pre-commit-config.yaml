@@ -1,0 +1,15 @@
+# Autoresearch pre-commit: run the contract test on every commit.
+# Install: pip install pre-commit && pre-commit install
+#
+# Skip locally with --no-verify only if you know what you're doing;
+# CI will still run the full suite.
+
+repos:
+  - repo: local
+    hooks:
+      - id: autoresearch-contract
+        name: Autoresearch contract test
+        entry: bash -c 'pytest tests/test_autoresearch_notebook.py::test_notebook_emits_metric -q'
+        language: system
+        pass_filenames: false
+        files: '^(notebooks/autoresearch\.ipynb|tests/test_autoresearch_notebook\.py)$'
